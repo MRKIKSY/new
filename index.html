@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PWAN Buy2Sell Petition Submission</title>
+</head>
+
+<body style="font-family: Arial, sans-serif; margin: 2rem; max-width: 800px;">
+
+<h2 style="text-align:center; color:#003366;">
+PWAN BUY2SELL – DOCUMENT SUBMISSION
+</h2>
+
+<p>
+<strong>Full Name</strong>
+<input type="text" id="fullName" required style="width:100%; padding:10px;">
+</p>
+
+<p>
+<strong>Email Address</strong>
+<input type="email" id="email" required style="width:100%; padding:10px;">
+</p>
+
+<p>
+<strong>Date Payment Was Made Into PWAN Account</strong>
+<input type="date" id="paymentDate" required style="width:100%; padding:10px;">
+</p>
+
+<p>
+<strong>Name and Account Details the Buy2Sell Investment Was Paid Into</strong>
+<textarea id="accountDetails" required style="width:100%; padding:10px; height:90px;"></textarea>
+</p>
+
+<p>
+<strong>Upload Supporting Documents (PDF or Images – Multiple Allowed)</strong>
+<input type="file" id="documents" multiple accept=".pdf,image/*"
+style="width:100%; padding:10px;">
+</p>
+
+<button id="submitBtn"
+style="
+background:#003366;
+color:white;
+padding:12px 25px;
+border:none;
+cursor:pointer;
+font-size:16px;
+">
+SUBMIT
+</button>
+
+<div id="message" style="margin-top:15px;font-weight:bold;"></div>
+<script>
+document.getElementById("submitBtn").onclick = function () {
+
+  const btn = document.getElementById("submitBtn");
+  const messageBox = document.getElementById("message");
+
+  const fullName = document.getElementById("fullName").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const paymentDate = document.getElementById("paymentDate").value;
+  const accountDetails = document.getElementById("accountDetails").value.trim();
+  const files = document.getElementById("documents").files;
+
+  if (!fullName || !email || !paymentDate || !accountDetails || files.length === 0) {
+    alert("Please complete all fields and upload at least one document.");
+    return;
+  }
+
+  // Prevent double submission
+  btn.disabled = true;
+  btn.innerText = "SENDING...";
+  btn.style.background = "#999";
+  btn.style.cursor = "not-allowed";
+  messageBox.innerHTML = "<span style='color:#003366;'>Uploading documents, please wait...</span>";
+
+  let totalSize = 0;
+  for (let file of files) totalSize += file.size;
+  if (totalSize > 25 * 1024 * 1024) {
+    alert("Total upload size exceeds 25MB.");
+    btn.disabled = false;
+    btn.innerText = "SUBMIT";
+    btn.style.background = "#003366";
+    btn.style.cursor = "pointer";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("fullName", fullName);
+  formData.append("email", email);
+  formData.append("paymentDate", paymentDate);
+  formData.append("accountDetails", accountDetails);
+
+  for (let file of files) {
+    formData.append("documents", file);
+  }
+
+  fetch("/submit-poa", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.error) {
+      messageBox.innerHTML =
+        "<span style='color:red;'>" + data.error + "</span>";
+
+      // Re-enable button on error
+      btn.disabled = false;
+      btn.innerText = "SUBMIT";
+      btn.style.background = "#003366";
+      btn.style.cursor = "pointer";
+    } else {
+      messageBox.innerHTML =
+        "<span style='color:green;'>Submission successful. Your documents have been received.</span>";
+      btn.innerText = "SENT ✓";
+    }
+  })
+  .catch(() => {
+    messageBox.innerHTML =
+      "<span style='color:red;'>Submission failed. Please try again.</span>";
+
+    btn.disabled = false;
+    btn.innerText = "SUBMIT";
+    btn.style.background = "#003366";
+    btn.style.cursor = "pointer";
+  });
+};
+</script>
+
+  
+
+</body>
+</html>
