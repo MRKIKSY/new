@@ -25,7 +25,8 @@ app.use(session({
   cookie: { httpOnly: true }
 }));
 
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, '../public')));
+
 
 /* ---------- DATABASE ---------- */
 mongoose.connect(process.env.MONGO_URI)
