@@ -25,7 +25,7 @@ app.use(session({
   cookie: { httpOnly: true }
 }));
 
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.staticpath.join(__dirname, 'public'));
 
 
 /* ---------- DATABASE ---------- */
