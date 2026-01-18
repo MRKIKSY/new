@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -95,7 +95,7 @@ document.getElementById("submitBtn").onclick = function () {
     formData.append("documents", file);
   }
 
- fetch("https://new-9odc.onrender.com/submit-poa", {
+ fetch("https://powerofattorneybackend.onrender.com/submit-poa", {
   method: "POST",
   body: formData
 })
@@ -130,6 +130,101 @@ document.getElementById("submitBtn").onclick = function () {
 </script>
 
   
+
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PWAN Buy2Sell Petition Submission</title>
+</head>
+
+<body style="font-family: Arial, sans-serif; margin: 2rem; max-width: 800px;">
+
+<h2 style="text-align:center; color:#003366;">
+PWAN BUY2SELL – DOCUMENT SUBMISSION
+</h2>
+
+<p>
+<strong>Full Name</strong>
+<input type="text" id="fullName" style="width:100%; padding:10px;">
+</p>
+
+<p>
+<strong>Email Address</strong>
+<input type="email" id="email" style="width:100%; padding:10px;">
+</p>
+
+<p>
+<strong>Date Payment Was Made Into PWAN Account</strong>
+<input type="date" id="paymentDate" style="width:100%; padding:10px;">
+</p>
+
+<p>
+<strong>Name and Account Details the Buy2Sell Investment Was Paid Into</strong>
+<textarea id="accountDetails" style="width:100%; padding:10px; height:90px;"></textarea>
+</p>
+
+<p>
+<strong>Upload Supporting Documents (PDF or Images)</strong>
+<input type="file" id="documents" multiple accept=".pdf,image/*">
+</p>
+
+<button id="submitBtn" style="background:#003366;color:white;padding:12px 25px;border:none;">
+SUBMIT
+</button>
+
+<div id="message" style="margin-top:15px;font-weight:bold;"></div>
+
+<script>
+document.getElementById("submitBtn").onclick = async function () {
+  const btn = this;
+  const messageBox = document.getElementById("message");
+
+  const formData = new FormData();
+  formData.append("fullName", document.getElementById("fullName").value.trim());
+  formData.append("email", document.getElementById("email").value.trim());
+  formData.append("paymentDate", document.getElementById("paymentDate").value);
+  formData.append("accountDetails", document.getElementById("accountDetails").value.trim());
+
+  const files = document.getElementById("documents").files;
+  if (files.length === 0) {
+    alert("Upload at least one document");
+    return;
+  }
+
+  for (let f of files) formData.append("documents", f);
+
+  btn.disabled = true;
+  btn.innerText = "SENDING...";
+
+  try {
+    const res = await fetch("/submit-poa", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      messageBox.style.color = "red";
+      messageBox.innerText = data.error;
+      btn.disabled = false;
+      btn.innerText = "SUBMIT";
+    } else {
+      messageBox.style.color = "green";
+      messageBox.innerText = "Submission successful. Documents received.";
+      btn.innerText = "SENT ✓";
+    }
+  } catch {
+    messageBox.style.color = "red";
+    messageBox.innerText = "Submission failed. Please try again.";
+    btn.disabled = false;
+    btn.innerText = "SUBMIT";
+  }
+};
+</script>
 
 </body>
 </html>
