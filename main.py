@@ -1,18 +1,16 @@
 import os
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request, Depends
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.sessions import SessionMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
 from bson import ObjectId
 from typing import List
-import uvicorn
 from datetime import datetime
 
 # ---------- ENV ----------
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/pwan")
-ADMIN_SECRET = os.environ.get("ADMIN_SECRET", "devsecret")
 SESSION_KEY = os.environ.get("SESSION_KEY", "devsessionkey")
 
 # ---------- APP ----------
@@ -29,13 +27,17 @@ app.add_middleware(
 )
 
 # ---------- STATIC FILES ----------
-app.mount("/", StaticFiles(directory="public", html=True), name="public")
+app.mount("/public", StaticFiles(directory="public", html=True), name="public")
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    with open("public/index.html") as f:
+        return f.read()
 
 # ---------- DATABASE ----------
 client = AsyncIOMotorClient(MONGO_URI)
 db = client.get_default_database()
 fs_bucket = AsyncIOMotorGridFSBucket(db, bucket_name="uploads")
-
 submissions_collection = db.submissions
 
 # ---------- ADMIN DEPENDENCY ----------
@@ -44,7 +46,6 @@ def admin_required(request: Request):
         raise HTTPException(status_code=403, detail="Admin access only")
 
 # ---------- ROUTES ----------
-
 @app.post("/submit-poa")
 async def submit_poa(
     fullName: str = Form(...),
@@ -56,7 +57,6 @@ async def submit_poa(
     if not documents:
         raise HTTPException(status_code=400, detail="At least one document required")
 
-    # Save files to GridFS
     files_meta = []
     for doc in documents:
         file_id = await fs_bucket.upload_from_stream(
@@ -65,7 +65,7 @@ async def submit_poa(
             metadata={"originalName": doc.filename, "contentType": doc.content_type}
         )
         files_meta.append({
-            "fileId": file_id,
+            "fileId": str(file_id),
             "filename": doc.filename,
             "contentType": doc.content_type
         })
@@ -82,7 +82,6 @@ async def submit_poa(
     result = await submissions_collection.insert_one(submission)
     return {"success": True, "id": str(result.inserted_id)}
 
-# ---------- ADMIN LOGIN ----------
 @app.post("/admin/login")
 async def admin_login(request: Request):
     request.session["admin"] = True
@@ -93,7 +92,6 @@ async def admin_logout(request: Request, admin=Depends(admin_required)):
     request.session.clear()
     return {"success": True, "message": "Logged out"}
 
-# ---------- LIST SUBMISSIONS ----------
 @app.get("/admin/submissions")
 async def list_submissions(admin=Depends(admin_required)):
     submissions = []
@@ -105,24 +103,21 @@ async def list_submissions(admin=Depends(admin_required)):
         submissions.append(doc)
     return submissions
 
-# ---------- DOWNLOAD FILE ----------
 @app.get("/admin/file/{file_id}")
 async def download_file(file_id: str, admin=Depends(admin_required)):
     oid = ObjectId(file_id)
-    try:
-        file_info = await db["uploads.files"].find_one({"_id": oid})
-        if not file_info:
-            raise HTTPException(status_code=404, detail="File not found")
-        # Stream file
-        file_path = f"/tmp/{file_info['filename']}"
-        with open(file_path, "wb") as f:
-            async for chunk in fs_bucket.open_download_stream(oid):
-                f.write(chunk)
-        return FileResponse(file_path, media_type=file_info.get("contentType", "application/octet-stream"),
-                            filename=file_info["metadata"].get("originalName", file_info["filename"]))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    file_info = await db["uploads.files"].find_one({"_id": oid})
+    if not file_info:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    stream = fs_bucket.open_download_stream(oid)
+    return StreamingResponse(
+        stream,
+        media_type=file_info.get("contentType", "application/octet-stream"),
+        headers={"Content-Disposition": f"attachment; filename={file_info['metadata'].get('originalName', file_info['filename'])}"}
+    )
 
 # ---------- START SERVER ----------
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), reload=True)
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
