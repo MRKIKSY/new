@@ -1,61 +1,55 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>PWAN Buy2Sell Petition Submission</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; max-width: 800px; }
+    input, textarea { width: 100%; padding: 10px; margin-bottom: 1rem; }
+    button { background:#003366; color:white; padding:12px 25px; border:none; cursor:pointer; font-size:16px; }
+    #message { margin-top:15px; font-weight:bold; }
+  </style>
 </head>
-
-<body style="font-family: Arial, sans-serif; margin: 2rem; max-width: 800px;">
+<body>
 
 <h2 style="text-align:center; color:#003366;">
-PWAN BUY2SELL – DOCUMENT SUBMISSION
+  PWAN BUY2SELL – DOCUMENT SUBMISSION
 </h2>
 
 <p>
-<strong>Full Name</strong>
-<input type="text" id="fullName" required style="width:100%; padding:10px;">
+  <strong>Full Name</strong>
+  <input type="text" id="fullName" required>
 </p>
 
 <p>
-<strong>Email Address</strong>
-<input type="email" id="email" required style="width:100%; padding:10px;">
+  <strong>Email Address</strong>
+  <input type="email" id="email" required>
 </p>
 
 <p>
-<strong>Date Payment Was Made Into PWAN Account</strong>
-<input type="date" id="paymentDate" required style="width:100%; padding:10px;">
+  <strong>Date Payment Was Made Into PWAN Account</strong>
+  <input type="date" id="paymentDate" required>
 </p>
 
 <p>
-<strong>Name and Account Details the Buy2Sell Investment Was Paid Into</strong>
-<textarea id="accountDetails" required style="width:100%; padding:10px; height:90px;"></textarea>
+  <strong>Name and Account Details the Buy2Sell Investment Was Paid Into</strong>
+  <textarea id="accountDetails" required style="height:90px;"></textarea>
 </p>
 
 <p>
-<strong>Upload Supporting Documents (PDF or Images – Multiple Allowed)</strong>
-<input type="file" id="documents" multiple accept=".pdf,image/*"
-style="width:100%; padding:10px;">
+  <strong>Upload Supporting Documents (PDF or Images – Multiple Allowed)</strong>
+  <input type="file" id="documents" multiple accept=".pdf,image/*">
 </p>
 
-<button id="submitBtn"
-style="
-background:#003366;
-color:white;
-padding:12px 25px;
-border:none;
-cursor:pointer;
-font-size:16px;
-">
-SUBMIT
-</button>
+<button id="submitBtn">SUBMIT</button>
 
-<div id="message" style="margin-top:15px;font-weight:bold;"></div>
+<div id="message"></div>
+
 <script>
-document.getElementById("submitBtn").onclick = function () {
+const btn = document.getElementById("submitBtn");
+const messageBox = document.getElementById("message");
 
-  const btn = document.getElementById("submitBtn");
-  const messageBox = document.getElementById("message");
-
+btn.addEventListener("click", async () => {
   const fullName = document.getElementById("fullName").value.trim();
   const email = document.getElementById("email").value.trim();
   const paymentDate = document.getElementById("paymentDate").value;
@@ -74,17 +68,6 @@ document.getElementById("submitBtn").onclick = function () {
   btn.style.cursor = "not-allowed";
   messageBox.innerHTML = "<span style='color:#003366;'>Uploading documents, please wait...</span>";
 
-  let totalSize = 0;
-  for (let file of files) totalSize += file.size;
-  if (totalSize > 25 * 1024 * 1024) {
-    alert("Total upload size exceeds 25MB.");
-    btn.disabled = false;
-    btn.innerText = "SUBMIT";
-    btn.style.background = "#003366";
-    btn.style.cursor = "pointer";
-    return;
-  }
-
   const formData = new FormData();
   formData.append("fullName", fullName);
   formData.append("email", email);
@@ -95,110 +78,6 @@ document.getElementById("submitBtn").onclick = function () {
     formData.append("documents", file);
   }
 
- fetch("https://powerofattorneybackend.onrender.com/submit-poa", {
-  method: "POST",
-  body: formData
-})
-
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      messageBox.innerHTML =
-        "<span style='color:red;'>" + data.error + "</span>";
-
-      // Re-enable button on error
-      btn.disabled = false;
-      btn.innerText = "SUBMIT";
-      btn.style.background = "#003366";
-      btn.style.cursor = "pointer";
-    } else {
-      messageBox.innerHTML =
-        "<span style='color:green;'>Submission successful. Your documents have been received.</span>";
-      btn.innerText = "SENT ✓";
-    }
-  })
-  .catch(() => {
-    messageBox.innerHTML =
-      "<span style='color:red;'>Submission failed. Please try again.</span>";
-
-    btn.disabled = false;
-    btn.innerText = "SUBMIT";
-    btn.style.background = "#003366";
-    btn.style.cursor = "pointer";
-  });
-};
-</script>
-
-  
-
-</body>
-</html> -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>PWAN Buy2Sell Petition Submission</title>
-</head>
-
-<body style="font-family: Arial, sans-serif; margin: 2rem; max-width: 800px;">
-
-<h2 style="text-align:center; color:#003366;">
-PWAN BUY2SELL – DOCUMENT SUBMISSION
-</h2>
-
-<p>
-<strong>Full Name</strong>
-<input type="text" id="fullName" style="width:100%; padding:10px;">
-</p>
-
-<p>
-<strong>Email Address</strong>
-<input type="email" id="email" style="width:100%; padding:10px;">
-</p>
-
-<p>
-<strong>Date Payment Was Made Into PWAN Account</strong>
-<input type="date" id="paymentDate" style="width:100%; padding:10px;">
-</p>
-
-<p>
-<strong>Name and Account Details the Buy2Sell Investment Was Paid Into</strong>
-<textarea id="accountDetails" style="width:100%; padding:10px; height:90px;"></textarea>
-</p>
-
-<p>
-<strong>Upload Supporting Documents (PDF or Images)</strong>
-<input type="file" id="documents" multiple accept=".pdf,image/*">
-</p>
-
-<button id="submitBtn" style="background:#003366;color:white;padding:12px 25px;border:none;">
-SUBMIT
-</button>
-
-<div id="message" style="margin-top:15px;font-weight:bold;"></div>
-
-<script>
-document.getElementById("submitBtn").onclick = async function () {
-  const btn = this;
-  const messageBox = document.getElementById("message");
-
-  const formData = new FormData();
-  formData.append("fullName", document.getElementById("fullName").value.trim());
-  formData.append("email", document.getElementById("email").value.trim());
-  formData.append("paymentDate", document.getElementById("paymentDate").value);
-  formData.append("accountDetails", document.getElementById("accountDetails").value.trim());
-
-  const files = document.getElementById("documents").files;
-  if (files.length === 0) {
-    alert("Upload at least one document");
-    return;
-  }
-
-  for (let f of files) formData.append("documents", f);
-
-  btn.disabled = true;
-  btn.innerText = "SENDING...";
-
   try {
     const res = await fetch("/submit-poa", {
       method: "POST",
@@ -207,23 +86,26 @@ document.getElementById("submitBtn").onclick = async function () {
 
     const data = await res.json();
 
-    if (data.error) {
-      messageBox.style.color = "red";
-      messageBox.innerText = data.error;
+    if (!res.ok) {
+      messageBox.innerHTML = `<span style='color:red;'>${data.detail || data.error || "Submission failed"}</span>`;
       btn.disabled = false;
       btn.innerText = "SUBMIT";
-    } else {
-      messageBox.style.color = "green";
-      messageBox.innerText = "Submission successful. Documents received.";
-      btn.innerText = "SENT ✓";
+      btn.style.background = "#003366";
+      btn.style.cursor = "pointer";
+      return;
     }
-  } catch {
-    messageBox.style.color = "red";
-    messageBox.innerText = "Submission failed. Please try again.";
+
+    messageBox.innerHTML = "<span style='color:green;'>Submission successful. Your documents have been received.</span>";
+    btn.innerText = "SENT ✓";
+
+  } catch (err) {
+    messageBox.innerHTML = "<span style='color:red;'>Submission failed. Please try again.</span>";
     btn.disabled = false;
     btn.innerText = "SUBMIT";
+    btn.style.background = "#003366";
+    btn.style.cursor = "pointer";
   }
-};
+});
 </script>
 
 </body>
